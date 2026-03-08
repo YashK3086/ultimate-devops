@@ -2,17 +2,32 @@ name: DevOps CI/CD Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Build Docker Image
-        run: docker build -t devops-lab-app ./app-v3
+        run: |
+          docker build -t yashk3086/ultimate-app:latest ./app-v3
+          # If you have a Docker login, add it here. Otherwise, this builds locally on the runner.
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ultimate-eks-cluster --region us-east-1
 
       - name: Deploy to Kubernetes
         run: |
